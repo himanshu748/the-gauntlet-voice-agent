@@ -1,214 +1,168 @@
-# AI Voice Agents Challenge - Starter Repository
+# The Gauntlet: Startup Validator Voice Agent
 
-Welcome to the **AI Voice Agents Challenge** by [murf.ai](https://murf.ai)!
+The Gauntlet is a voice-first startup pitch game where you step into a mock investor room and try to survive a brutally honest VC.
 
-## About the Challenge
+You pitch absurd startup ideas, the agent challenges your assumptions, and after three rounds it decides whether you are getting a term sheet or getting roasted out of the room.
 
-We just launched **Murf Falcon** – the consistently fastest TTS API, and you're going to be among the first to test it out in ways never thought before!
+## What It Does
 
-**Build 10 AI Voice Agents over the course of 10 Days** along with help from our devs and the community champs, and win rewards!
+- Runs a live voice conversation with a startup-validator persona called **The Partner**
+- Gives the user three absurd startup ideas to pitch
+- Tracks pitch rounds and reactions with backend game state
+- Uses tool calls to start the session, generate pitch prompts, validate each round, and issue a final term-sheet-style summary
+- Uses real-time speech input/output so the experience feels like a live pitch meeting
 
-### How It Works
+## Demo Flow
 
-- One task to be provided everyday along with a GitHub repo for reference
-- Build a voice agent with specific personas and skills
-- Post on GitHub and share with the world on LinkedIn!
+1. Join the voice session.
+2. The Partner welcomes you to The Gauntlet.
+3. Give your founder name.
+4. Pitch the assigned startup idea.
+5. Survive three rounds of VC-style critique.
+6. Receive the final investment decision.
+
+Example scenarios include:
+
+- Bottled air for fish
+- A dating app for ghosts
+- A VR headset for cats
+- A social network for plants
+
+## Tech Stack
+
+**Backend**
+
+- LiveKit Agents for real-time voice sessions
+- Deepgram Nova 3 for speech-to-text
+- Google Gemini 2.5 Flash for the reasoning layer
+- Murf Falcon TTS for voice output
+- Silero VAD and LiveKit turn detection
+
+**Frontend**
+
+- Next.js
+- React
+- LiveKit Components
+- Tailwind CSS
 
 ## Repository Structure
 
-This is a **monorepo** that contains both the backend and frontend for building voice agent applications. It's designed to be your starting point for each day's challenge task.
-
+```text
+the-gauntlet-voice-agent/
+|-- backend/          # LiveKit voice agent backend
+|   `-- src/
+|       |-- agent.py        # The Partner voice agent
+|       `-- improv_game.py  # Gauntlet round/game state
+|-- frontend/         # Voice session UI
+|-- challenges/       # Murf challenge task notes
+|-- start_app.sh      # Starts local services
+`-- README.md
 ```
-falcon-tdova-nov25-livekit/
-├── backend/          # LiveKit Agents backend with Murf Falcon TTS
-├── frontend/         # React/Next.js frontend for voice interaction
-├── start_app.sh      # Convenience script to start all services
-└── README.md         # This file
-```
 
-### Backend
-
-The backend is based on [LiveKit's agent-starter-python](https://github.com/livekit-examples/agent-starter-python) with modifications to integrate **Murf Falcon TTS** for ultra-fast, high-quality voice synthesis.
-
-**Features:**
-
-- Complete voice AI agent framework using LiveKit Agents
-- Murf Falcon TTS integration for fastest text-to-speech
-- LiveKit Turn Detector for contextually-aware speaker detection
-- Background voice cancellation
-- Integrated metrics and logging
-- Complete test suite with evaluation framework
-- Production-ready Dockerfile
-
-[→ Backend Documentation](./backend/README.md)
-
-### Frontend
-
-The frontend is based on [LiveKit's agent-starter-react](https://github.com/livekit-examples/agent-starter-react), providing a modern, beautiful UI for interacting with your voice agents.
-
-**Features:**
-
-- Real-time voice interaction with LiveKit Agents
-- Camera video streaming support
-- Screen sharing capabilities
-- Audio visualization and level monitoring
-- Light/dark theme switching
-- Highly customizable branding and UI
-
-[→ Frontend Documentation](./frontend/README.md)
-
-## Quick Start
+## Local Setup
 
 ### Prerequisites
 
-Make sure you have the following installed:
+- Python 3.9+
+- `uv`
+- Node.js 18+
+- `pnpm`
+- LiveKit CLI or a local LiveKit server
 
-- Python 3.9+ with [uv](https://docs.astral.sh/uv/) package manager
-- Node.js 18+ with pnpm
-- [LiveKit CLI](https://docs.livekit.io/home/cli/cli-setup) (optional but recommended)
-- [LiveKit Server](https://docs.livekit.io/home/self-hosting/local/) for local development
-
-### 1. Clone the Repository
-
-```bash
-git clone <your-repo-url>
-cd falcon-tdova-nov25-livekit
-```
-
-### 2. Backend Setup
+### Backend
 
 ```bash
 cd backend
-
-# Install dependencies
 uv sync
-
-# Copy environment file and configure
 cp .env.example .env.local
+```
 
-# Edit .env.local with your credentials:
-# - LIVEKIT_URL
-# - LIVEKIT_API_KEY
-# - LIVEKIT_API_SECRET
-# - MURF_API_KEY (for Falcon TTS)
-# - GOOGLE_API_KEY (for Gemini LLM)
-# - DEEPGRAM_API_KEY (for Deepgram STT)
+Add the required credentials to `backend/.env.local`:
 
-# Download required models
+```text
+LIVEKIT_URL=
+LIVEKIT_API_KEY=
+LIVEKIT_API_SECRET=
+MURF_API_KEY=
+GOOGLE_API_KEY=
+DEEPGRAM_API_KEY=
+```
+
+Download the required voice/turn-detection assets:
+
+```bash
 uv run python src/agent.py download-files
 ```
 
-For LiveKit Cloud users, you can automatically populate credentials:
-
-```bash
-lk cloud auth
-lk app env -w -d .env.local
-```
-
-### 3. Frontend Setup
+### Frontend
 
 ```bash
 cd frontend
-
-# Install dependencies
 pnpm install
-
-# Copy environment file and configure
 cp .env.example .env.local
-
-# Edit .env.local with the same LiveKit credentials
 ```
 
-### 4. Run the Application
+Add the matching LiveKit credentials to `frontend/.env.local`.
 
-#### Install livekit server
+## Run Locally
 
-```bash
-brew install livekit
-```
-
-You have two options:
-
-#### Option A: Use the convenience script (runs everything)
+From the repo root:
 
 ```bash
-# From the root directory
 chmod +x start_app.sh
 ./start_app.sh
 ```
 
-This will start:
+This starts:
 
-- LiveKit Server (in dev mode)
-- Backend agent (listening for connections)
-- Frontend app (at http://localhost:3000)
+- Local LiveKit server
+- Backend voice agent
+- Frontend app at `http://localhost:3000`
 
-#### Option B: Run services individually
+You can also run services separately:
 
 ```bash
-# Terminal 1 - LiveKit Server
+# Terminal 1
 livekit-server --dev
 
-# Terminal 2 - Backend Agent
+# Terminal 2
 cd backend
 uv run python src/agent.py dev
 
-# Terminal 3 - Frontend
+# Terminal 3
 cd frontend
 pnpm dev
 ```
 
-Then open http://localhost:3000 in your browser!
+## Key Files
 
-## Daily Challenge Tasks
+- `backend/src/agent.py` - Defines The Partner persona and LiveKit agent session
+- `backend/src/improv_game.py` - Stores pitch rounds, startup prompts, and final session state
+- `frontend/app-config.ts` - Frontend branding for The Gauntlet
+- `frontend/components/app/welcome-view.tsx` - Start screen for the voice experience
 
-Each day, you'll receive a new task that builds upon your voice agent. The tasks will help you:
+## Status
 
-- Implement different personas and conversation styles
-- Add custom tools and capabilities
-- Integrate with external APIs
-- Build domain-specific agents (customer service, tutoring, etc.)
-- Optimize performance and user experience
+The core voice-agent concept is implemented:
 
-**Stay tuned for daily task announcements!**
+- Custom VC persona
+- Startup pitch game loop
+- Murf/Deepgram/Gemini/LiveKit voice pipeline
+- Branded frontend entry screen
 
-## Documentation & Resources
+The project can be improved further with:
 
-- [Murf Falcon TTS Documentation](https://murf.ai/api/docs/text-to-speech/streaming)
-- [LiveKit Agents Documentation](https://docs.livekit.io/agents)
-- [Original Backend Template](https://github.com/livekit-examples/agent-starter-python)
-- [Original Frontend Template](https://github.com/livekit-examples/agent-starter-react)
+- A hosted demo link
+- A short walkthrough video
+- Stronger visual branding beyond the starter UI
+- More pitch scenarios and scoring logic
 
-## Testing
+## Credits
 
-The backend includes a comprehensive test suite:
+Built for the Murf AI Voice Agents Challenge.
 
-```bash
-cd backend
-uv run pytest
-```
-
-Learn more about testing voice agents in the [LiveKit testing documentation](https://docs.livekit.io/agents/build/testing/).
-
-## Contributing & Community
-
-This is a challenge repository, but we encourage collaboration and knowledge sharing!
-
-- Share your solutions and learnings on GitHub
-- Post about your progress on LinkedIn
-- Join the [LiveKit Community Slack](https://livekit.io/join-slack)
-- Connect with other challenge participants
+This project started from the Murf AI / LiveKit voice-agent starter repository and was customized into The Gauntlet, a startup validator voice-agent game.
 
 ## License
 
-This project is based on MIT-licensed templates from LiveKit and includes integration with Murf Falcon. See individual LICENSE files in backend and frontend directories for details.
-
-## Have Fun!
-
-Remember, the goal is to learn, experiment, and build amazing voice AI agents. Don't hesitate to be creative and push the boundaries of what's possible with Murf Falcon and LiveKit!
-
-Good luck with the challenge!
-
----
-
-Built for the AI Voice Agents Challenge by murf.ai
+MIT License. See `LICENSE` for details.
