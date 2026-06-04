@@ -13,6 +13,10 @@ DEFAULT_SCENARIOS = [
     "Sell me a smart water bottle that judges your hydration habits.",
 ]
 
+MAX_PLAYER_NAME_CHARS = 80
+MAX_REACTION_CHARS = 800
+DEFAULT_HOST_REACTION = "No reaction recorded."
+
 
 @dataclass
 class ImprovState:
@@ -31,7 +35,11 @@ class ImprovGame:
         self.current_scenario: Optional[str] = None
 
     def start_game(self, player_name: str) -> None:
-        normalized_name = player_name.strip() or "Founder"
+        normalized_name = _normalize_bounded_text(
+            player_name,
+            max_chars=MAX_PLAYER_NAME_CHARS,
+            fallback="Founder",
+        )
         self.state.player_name = normalized_name
         self.state.current_round = 0
         self.state.rounds = []
@@ -57,7 +65,11 @@ class ImprovGame:
         self.state.rounds.append(
             {
                 "scenario": self.current_scenario,
-                "host_reaction": host_reaction.strip(),
+                "host_reaction": _normalize_bounded_text(
+                    host_reaction,
+                    max_chars=MAX_REACTION_CHARS,
+                    fallback=DEFAULT_HOST_REACTION,
+                ),
             }
         )
         self.state.phase = "validating"
@@ -72,3 +84,10 @@ class ImprovGame:
             if scenario not in self.used_scenarios
         ]
         return random.choice(unused_scenarios or self.scenarios)
+
+
+def _normalize_bounded_text(value: str, *, max_chars: int, fallback: str) -> str:
+    normalized = " ".join(value.split())
+    if not normalized:
+        return fallback
+    return normalized[:max_chars]
