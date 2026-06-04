@@ -1,35 +1,29 @@
 import logging
-from pathlib import Path
-from dotenv import load_dotenv
 import os
-import json
-from datetime import datetime
-from typing import Annotated, Dict, Any, Optional, List
+from pathlib import Path
 
-# Load env vars
-env_path = Path(__file__).parent.parent / ".env.local"
-load_dotenv(dotenv_path=env_path)
-
+from dotenv import load_dotenv
 from livekit.agents import (
     Agent,
     AgentSession,
+    AutoSubscribe,
     JobContext,
     JobProcess,
-    MetricsCollectedEvent,
     RoomInputOptions,
     WorkerOptions,
     cli,
-    metrics,
     function_tool,
-    RunContext,
-    llm,
-    AutoSubscribe,
 )
-from livekit.plugins import silero, google, deepgram, noise_cancellation, murf
+from livekit.plugins import deepgram, google, murf, noise_cancellation, silero
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
+
 from .improv_game import ImprovGame
 
+env_path = Path(__file__).parent.parent / ".env.local"
+load_dotenv(dotenv_path=env_path)
+
 logger = logging.getLogger("startup-validator")
+
 
 class StartupValidatorAgent(Agent):
     def __init__(self) -> None:
@@ -41,14 +35,14 @@ class StartupValidatorAgent(Agent):
     def _get_instructions(self) -> str:
         return """
         You are 'The Partner', a brutally honest, high-stakes Venture Capitalist and Startup Validator. You run 'The Gauntlet', a pitch validation session.
-        
+
         **PERSONA:**
         - You are sharp, fast-talking, and business-focused.
         - You use VC jargon (burn rate, TAM, CAC, LTV, pivot, unicorn, decacorn).
         - You are skeptical but willing to be convinced.
         - You roast bad ideas mercilessly but praise true innovation (even if it's absurd).
         - Your voice should sound professional, authoritative, and slightly impatient.
-        
+
         **GAME FLOW:**
         1.  **Intro:** When the user joins, welcome them to 'The Gauntlet'. Ask for their name and their "pre-seed valuation" (just for fun).
         2.  **Pitch Rounds (Validation):**
@@ -66,13 +60,13 @@ class StartupValidatorAgent(Agent):
             - After 3 rounds, summarize their performance.
             - Decide if you will fund them or pass.
             - Thank them and close the session.
-            
+
         **TOOLS:**
         - `start_session(founder_name)`: Call this when the user provides their name.
         - `next_pitch()`: Call this to start a new pitch round.
         - `validate_pitch(reaction)`: Call this after you have reacted to the user's pitch.
         - `issue_term_sheet()`: Call this to end the game and summarize.
-        
+
         **IMPORTANT:**
         - If the user says "stop" or "quit", confirm and end the call.
         - Keep it professional but entertaining.
@@ -125,21 +119,22 @@ def prewarm(proc: JobProcess):
         # Murf Falcon
         proc.userdata["tts"] = murf.TTS(
             model="FALCON",
-            voice="Matthew", # Or another suitable professional voice
+            voice="Matthew",  # Or another suitable professional voice
             style="Promo",
         )
-        
+
         if not os.getenv("DEEPGRAM_API_KEY"):
             logger.error("DEEPGRAM_API_KEY is missing")
         if not os.getenv("GOOGLE_API_KEY"):
             logger.error("GOOGLE_API_KEY is missing")
         if not os.getenv("MURF_API_KEY"):
             logger.error("MURF_API_KEY is missing")
-            
+
         logger.info("Prewarm completed")
     except Exception as e:
         logger.error(f"Prewarm failed: {e}", exc_info=True)
         raise e
+
 
 async def entrypoint(ctx: JobContext):
     logger.info("Entrypoint started")
@@ -147,17 +142,18 @@ async def entrypoint(ctx: JobContext):
 
     logger.info(f"connecting to room {ctx.room.name}")
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
-    
+
     # Wait for participant to connect
     participant = await ctx.wait_for_participant()
     logger.info(f"starting voice assistant for participant {participant.identity}")
 
     agent = StartupValidatorAgent()
-    
+
     session = AgentSession(
         stt=ctx.proc.userdata.get("stt") or deepgram.STT(model="nova-3"),
         llm=ctx.proc.userdata.get("llm") or google.LLM(model="gemini-2.5-flash"),
-        tts=ctx.proc.userdata.get("tts") or murf.TTS(
+        tts=ctx.proc.userdata.get("tts")
+        or murf.TTS(
             model="FALCON",
             voice="Matthew",
             style="Promo",
@@ -166,7 +162,7 @@ async def entrypoint(ctx: JobContext):
         vad=ctx.proc.userdata["vad"],
         preemptive_generation=True,
     )
-    
+
     await session.start(
         agent=agent,
         room=ctx.room,
@@ -175,7 +171,11 @@ async def entrypoint(ctx: JobContext):
         ),
     )
 
-    await session.say("Welcome to The Gauntlet. I'm The Partner. State your name and let's see if you're unicorn material.", allow_interruptions=True)
+    await session.say(
+        "Welcome to The Gauntlet. I'm The Partner. State your name and let's see if you're unicorn material.",
+        allow_interruptions=True,
+    )
+
 
 if __name__ == "__main__":
     cli.run_app(

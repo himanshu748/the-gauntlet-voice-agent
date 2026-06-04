@@ -11,7 +11,7 @@ import {
   type ControlBarControls,
 } from '@/components/livekit/agent-control-bar/agent-control-bar';
 import { useChatMessages } from '@/hooks/useChatMessages';
-import { useConnectionTimeout } from '@/hooks/useConnectionTimout';
+import { useConnectionTimeout } from '@/hooks/useConnectionTimeout';
 import { useDebugMode } from '@/hooks/useDebug';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../livekit/scroll-area/scroll-area';
@@ -38,7 +38,7 @@ const BOTTOM_VIEW_MOTION_PROPS = {
     delay: 0.5,
     ease: 'easeOut',
   },
-};
+} as const;
 
 interface FadeProps {
   top?: boolean;
@@ -78,7 +78,7 @@ export const SessionView = ({
     microphone: true,
     chat: appConfig.supportsChatInput,
     camera: appConfig.supportsVideoInput,
-    screenShare: appConfig.supportsVideoInput,
+    screenShare: appConfig.supportsScreenShare,
   };
 
   useEffect(() => {

@@ -10,6 +10,8 @@ This Python project uses the `uv` package manager. You should always use `uv` to
 
 All app-level code is in the `src/` directory. In general, simple agents can be constructed with a single `agent.py` file. Additional files can be added, but you must retain `agent.py` as the entrypoint (see the associated Dockerfile for how this is deployed).
 
+This repository is customized for The Gauntlet. Do not reintroduce starter-template names such as `Assistant` or `agent-starter-python` in tests, docs, or package metadata.
+
 Be sure to maintain code formatting. You can use the ruff formatter/linter as needed: `uv run ruff format` and `uv run ruff check`.
 
 ## LiveKit Documentation

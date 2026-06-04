@@ -41,14 +41,17 @@ export const WelcomeView = ({
       <section className="bg-background flex flex-col items-center justify-center text-center">
         <WelcomeImage />
 
-        <h2 className="text-foreground text-2xl font-bold tracking-tight">
-          The Gauntlet
-        </h2>
+        <h2 className="text-foreground text-2xl font-bold tracking-tight">The Gauntlet</h2>
         <p className="text-muted-foreground max-w-prose pt-2 leading-6 font-medium">
           Pitch your startup idea. Survive the validation.
         </p>
 
-        <Button variant="primary" size="lg" onClick={onStartCall} className="mt-6 w-64 font-mono uppercase tracking-wider">
+        <Button
+          variant="primary"
+          size="lg"
+          onClick={onStartCall}
+          className="mt-6 w-64 font-mono tracking-wider uppercase"
+        >
           {startButtonText}
         </Button>
       </section>
