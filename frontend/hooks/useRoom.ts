@@ -2,6 +2,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Room, RoomEvent, TokenSource } from 'livekit-client';
 import { AppConfig } from '@/app-config';
 import { toastAlert } from '@/components/livekit/alert-toast';
+import {
+  type ConnectionDetailsErrorBody,
+  connectionDetailsMessage,
+  safeErrorDescription,
+  safeLogDetails,
+} from '@/lib/safe-errors';
+
+type ConnectionDetails = {
+  serverUrl: string;
+  participantToken: string;
+  roomName?: string;
+  participantName?: string;
+};
 
 export function useRoom(appConfig: AppConfig) {
   const aborted = useRef(false);
@@ -16,7 +29,7 @@ export function useRoom(appConfig: AppConfig) {
     function onMediaDevicesError(error: Error) {
       toastAlert({
         title: 'Encountered an error with your media devices',
-        description: `${error.name}: ${error.message}`,
+        description: safeErrorDescription(error, 'Media device setup failed.'),
       });
     }
 
@@ -59,10 +72,22 @@ export function useRoom(appConfig: AppConfig) {
                 : undefined,
             }),
           });
-          return await res.json();
+          const body = (await res.json().catch(() => null)) as
+            | ConnectionDetails
+            | ConnectionDetailsErrorBody
+            | null;
+          if (!res.ok) {
+            throw new Error(connectionDetailsMessage(body as ConnectionDetailsErrorBody | null));
+          }
+          if (!isConnectionDetails(body)) {
+            throw new Error('LiveKit connection details response was invalid.');
+          }
+          return body;
         } catch (error) {
-          console.error('Error fetching connection details:', error);
-          throw new Error('Error fetching connection details!');
+          console.warn('Connection details request failed', safeLogDetails(error));
+          throw new Error(
+            error instanceof Error ? error.message : 'Unable to fetch LiveKit connection details.'
+          );
         }
       }),
     [appConfig]
@@ -94,7 +119,7 @@ export function useRoom(appConfig: AppConfig) {
 
         toastAlert({
           title: 'There was an error connecting to the agent',
-          description: `${error.name}: ${error.message}`,
+          description: safeErrorDescription(error, 'LiveKit connection failed.'),
         });
       });
     }
@@ -105,4 +130,10 @@ export function useRoom(appConfig: AppConfig) {
   }, []);
 
   return { room, isSessionActive, startSession, endSession };
+}
+
+function isConnectionDetails(value: unknown): value is ConnectionDetails {
+  if (!value || typeof value !== 'object') return false;
+  const details = value as Partial<ConnectionDetails>;
+  return typeof details.serverUrl === 'string' && typeof details.participantToken === 'string';
 }

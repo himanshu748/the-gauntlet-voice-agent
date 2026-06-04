@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { PaperPlaneRightIcon, SpinnerIcon } from '@phosphor-icons/react/dist/ssr';
 import { Button } from '@/components/livekit/button';
+import { safeLogDetails } from '@/lib/safe-errors';
 
 const MOTION_PROPS = {
   variants: {
@@ -46,7 +47,7 @@ export function ChatInput({
       await onSend(message);
       setMessage('');
     } catch (error) {
-      console.error(error);
+      console.warn('Chat message send failed', safeLogDetails(error));
     } finally {
       setIsSending(false);
     }

@@ -3,6 +3,7 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { APP_CONFIG_DEFAULTS } from '@/app-config';
 import type { AppConfig } from '@/app-config';
+import { safeLogDetails } from '@/lib/safe-errors';
 
 export const CONFIG_ENDPOINT = process.env.NEXT_PUBLIC_APP_CONFIG_ENDPOINT;
 export const SANDBOX_ID = process.env.SANDBOX_ID;
@@ -60,12 +61,10 @@ export const getAppConfig = cache(async (headers: Headers): Promise<AppConfig> =
 
         return config;
       } else {
-        console.error(
-          `ERROR: querying config endpoint failed with status ${response.status}: ${response.statusText}`
-        );
+        console.warn('App config endpoint failed', { status: response.status });
       }
     } catch (error) {
-      console.error('ERROR: getAppConfig() - lib/utils.ts', error);
+      console.warn('App config fetch failed', safeLogDetails(error));
     }
   }
 
