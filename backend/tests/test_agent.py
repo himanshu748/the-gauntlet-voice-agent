@@ -22,6 +22,14 @@ def test_missing_provider_env_ignores_present_keys(monkeypatch) -> None:
     assert agent.missing_provider_env() == ["MURF_API_KEY"]
 
 
+def test_missing_provider_env_treats_blank_keys_as_missing(monkeypatch) -> None:
+    monkeypatch.setenv("DEEPGRAM_API_KEY", "  ")
+    monkeypatch.setenv("GOOGLE_API_KEY", "\t")
+    monkeypatch.setenv("MURF_API_KEY", "present")
+
+    assert agent.missing_provider_env() == ["DEEPGRAM_API_KEY", "GOOGLE_API_KEY"]
+
+
 def test_missing_runtime_env_includes_livekit_and_provider_keys(monkeypatch) -> None:
     for name in agent.REQUIRED_RUNTIME_ENV:
         monkeypatch.delenv(name, raising=False)

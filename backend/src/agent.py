@@ -39,7 +39,7 @@ class MissingRuntimeEnvError(RuntimeError):
 
 
 def missing_env_vars(names: tuple[str, ...] = REQUIRED_RUNTIME_ENV) -> list[str]:
-    return [name for name in names if not os.getenv(name)]
+    return [name for name in names if not os.getenv(name, "").strip()]
 
 
 def missing_provider_env() -> list[str]:

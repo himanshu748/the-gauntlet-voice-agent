@@ -9,28 +9,27 @@ type ConnectionDetails = {
   participantToken: string;
 };
 
-// NOTE: you are expected to define the following environment variables in `.env.local`:
-const API_KEY = process.env.LIVEKIT_API_KEY;
-const API_SECRET = process.env.LIVEKIT_API_SECRET;
-const LIVEKIT_URL = process.env.LIVEKIT_URL;
-
 // don't cache the results
 export const revalidate = 0;
 
 export async function POST(req: Request) {
   try {
-    if (LIVEKIT_URL === undefined) {
+    const livekitUrl = requiredEnv('LIVEKIT_URL');
+    const apiKey = requiredEnv('LIVEKIT_API_KEY');
+    const apiSecret = requiredEnv('LIVEKIT_API_SECRET');
+
+    if (!livekitUrl) {
       throw new Error('LIVEKIT_URL is not defined');
     }
-    if (API_KEY === undefined) {
+    if (!apiKey) {
       throw new Error('LIVEKIT_API_KEY is not defined');
     }
-    if (API_SECRET === undefined) {
+    if (!apiSecret) {
       throw new Error('LIVEKIT_API_SECRET is not defined');
     }
 
     // Parse agent configuration from request body
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const agentName: string = body?.room_config?.agents?.[0]?.agent_name;
 
     // Generate participant token
@@ -39,6 +38,8 @@ export async function POST(req: Request) {
     const roomName = `voice_assistant_room_${Math.floor(Math.random() * 10_000)}`;
 
     const participantToken = await createParticipantToken(
+      apiKey,
+      apiSecret,
       { identity: participantIdentity, name: participantName },
       roomName,
       agentName
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
 
     // Return connection details
     const data: ConnectionDetails = {
-      serverUrl: LIVEKIT_URL,
+      serverUrl: livekitUrl,
       roomName,
       participantToken: participantToken,
       participantName,
@@ -63,12 +64,18 @@ export async function POST(req: Request) {
   }
 }
 
+function requiredEnv(name: string): string {
+  return process.env[name]?.trim() ?? '';
+}
+
 function createParticipantToken(
+  apiKey: string,
+  apiSecret: string,
   userInfo: AccessTokenOptions,
   roomName: string,
   agentName?: string
 ): Promise<string> {
-  const at = new AccessToken(API_KEY, API_SECRET, {
+  const at = new AccessToken(apiKey, apiSecret, {
     ...userInfo,
     ttl: '15m',
   });
