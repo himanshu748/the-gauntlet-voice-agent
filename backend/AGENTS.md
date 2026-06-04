@@ -14,6 +14,10 @@ This repository is customized for The Gauntlet. Do not reintroduce starter-templ
 
 Be sure to maintain code formatting. You can use the ruff formatter/linter as needed: `uv run ruff format` and `uv run ruff check`.
 
+Provider setup and prewarm failures must stay sanitized in logs. Report missing
+environment variable names and exception categories, but do not log raw provider
+exception text or tracebacks because SDK errors can include local paths or tokens.
+
 ## LiveKit Documentation
 
 LiveKit Agents is a fast-evolving project, and the documentation is updated frequently. You should always refer to the latest documentation when working with this project. For your convenience, LiveKit offers an MCP server that can be used to browse and search its documentation. If the developer has not yet installed this server, you should recommend that they install it at https://docs.livekit.io/mcp. 

@@ -24,6 +24,16 @@ load_dotenv(dotenv_path=env_path)
 
 logger = logging.getLogger("startup-validator")
 
+REQUIRED_PROVIDER_ENV = ("DEEPGRAM_API_KEY", "GOOGLE_API_KEY", "MURF_API_KEY")
+
+
+def missing_provider_env() -> list[str]:
+    return [name for name in REQUIRED_PROVIDER_ENV if not os.getenv(name)]
+
+
+def provider_prewarm_failure_summary(exc: BaseException) -> str:
+    return f"{type(exc).__name__}; provider details omitted"
+
 
 class StartupValidatorAgent(Agent):
     def __init__(self) -> None:
@@ -111,6 +121,12 @@ class StartupValidatorAgent(Agent):
 def prewarm(proc: JobProcess):
     try:
         logger.info("Starting prewarm...")
+        missing = missing_provider_env()
+        if missing:
+            logger.error(
+                "Missing provider environment variables: %s", ", ".join(missing)
+            )
+
         proc.userdata["vad"] = silero.VAD.load()
         # Deepgram Nova 3
         proc.userdata["stt"] = deepgram.STT(model="nova-3")
@@ -123,17 +139,10 @@ def prewarm(proc: JobProcess):
             style="Promo",
         )
 
-        if not os.getenv("DEEPGRAM_API_KEY"):
-            logger.error("DEEPGRAM_API_KEY is missing")
-        if not os.getenv("GOOGLE_API_KEY"):
-            logger.error("GOOGLE_API_KEY is missing")
-        if not os.getenv("MURF_API_KEY"):
-            logger.error("MURF_API_KEY is missing")
-
         logger.info("Prewarm completed")
     except Exception as e:
-        logger.error(f"Prewarm failed: {e}", exc_info=True)
-        raise e
+        logger.error("Prewarm failed: %s", provider_prewarm_failure_summary(e))
+        raise
 
 
 async def entrypoint(ctx: JobContext):
