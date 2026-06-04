@@ -12,6 +12,6 @@
 - Full local run needs LiveKit credentials plus Murf, Gemini, and Deepgram keys configured in local env files.
 
 ## Safety Notes
-- Keep provider and LiveKit secrets server-side in ignored `.env.local` files.
+- Keep provider and LiveKit secrets server-side in ignored `.env`/`.env.local` files.
 - Do not commit `.venv`, `node_modules`, `.next`, local logs, screenshots, or challenge scratch output.
 - Prefer deterministic tests for game flow; avoid tests that require live LLM/provider calls unless explicitly marked.

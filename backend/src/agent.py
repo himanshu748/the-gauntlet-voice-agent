@@ -19,16 +19,35 @@ from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
 from .improv_game import ImprovGame
 
-env_path = Path(__file__).parent.parent / ".env.local"
-load_dotenv(dotenv_path=env_path)
+ENV_DIR = Path(__file__).parent.parent
+load_dotenv(dotenv_path=ENV_DIR / ".env")
+load_dotenv(dotenv_path=ENV_DIR / ".env.local", override=True)
 
 logger = logging.getLogger("startup-validator")
 
+REQUIRED_LIVEKIT_ENV = ("LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET")
 REQUIRED_PROVIDER_ENV = ("DEEPGRAM_API_KEY", "GOOGLE_API_KEY", "MURF_API_KEY")
+REQUIRED_RUNTIME_ENV = (*REQUIRED_LIVEKIT_ENV, *REQUIRED_PROVIDER_ENV)
+
+
+class MissingRuntimeEnvError(RuntimeError):
+    def __init__(self, missing: list[str]) -> None:
+        self.missing = missing
+        super().__init__(
+            "Missing required runtime environment variables: " + ", ".join(missing)
+        )
+
+
+def missing_env_vars(names: tuple[str, ...] = REQUIRED_RUNTIME_ENV) -> list[str]:
+    return [name for name in names if not os.getenv(name)]
 
 
 def missing_provider_env() -> list[str]:
-    return [name for name in REQUIRED_PROVIDER_ENV if not os.getenv(name)]
+    return missing_env_vars(REQUIRED_PROVIDER_ENV)
+
+
+def missing_runtime_env() -> list[str]:
+    return missing_env_vars(REQUIRED_RUNTIME_ENV)
 
 
 def provider_prewarm_failure_summary(exc: BaseException) -> str:
@@ -121,11 +140,12 @@ class StartupValidatorAgent(Agent):
 def prewarm(proc: JobProcess):
     try:
         logger.info("Starting prewarm...")
-        missing = missing_provider_env()
+        missing = missing_runtime_env()
         if missing:
             logger.error(
-                "Missing provider environment variables: %s", ", ".join(missing)
+                "Missing runtime environment variables: %s", ", ".join(missing)
             )
+            raise MissingRuntimeEnvError(missing)
 
         proc.userdata["vad"] = silero.VAD.load()
         # Deepgram Nova 3

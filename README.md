@@ -77,7 +77,8 @@ uv sync
 cp .env.example .env.local
 ```
 
-Add the required credentials to `backend/.env.local`:
+Add the required credentials to `backend/.env.local` or `backend/.env`.
+If both exist, `.env.local` wins.
 
 ```text
 LIVEKIT_URL=

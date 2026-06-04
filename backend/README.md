@@ -17,7 +17,8 @@ uv sync
 cp .env.example .env.local
 ```
 
-Fill in `backend/.env.local`:
+Fill in `backend/.env.local` or `backend/.env`. If both exist, `.env.local`
+overrides `.env`.
 
 ```text
 LIVEKIT_URL=
